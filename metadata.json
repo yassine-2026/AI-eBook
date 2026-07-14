@@ -1,0 +1,6 @@
+{
+  "name": "AI eBook Generator",
+  "description": "Generate professional educational eBooks in Arabic and English using Groq and Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
