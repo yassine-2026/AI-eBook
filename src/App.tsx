@@ -39,6 +39,8 @@ export default function App() {
   const [book, setBook] = useState<BookData | null>(null);
   const [coverUrl, setCoverUrl] = useState('');
 
+  const [downloads, setDownloads] = useState<any>(null);
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic || !author) {
@@ -50,6 +52,7 @@ export default function App() {
     setError('');
     setBook(null);
     setCoverUrl('');
+    setDownloads(null);
 
     try {
       const response = await fetch('/api/generate-book', {
@@ -69,8 +72,12 @@ export default function App() {
         throw new Error(data.error || 'Failed to generate book');
       }
 
-      setBook(data.book);
+      setBook(data.book || data.meta);
+      if (data.chapters) {
+          setBook({ ...data.meta, chapters: data.chapters });
+      }
       setCoverUrl(data.cover_url);
+      setDownloads(data.downloads);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -217,28 +224,46 @@ export default function App() {
             >
               
               {/* Header Actions - HIDDEN IN PRINT */}
-              <div className="flex justify-end gap-3 mb-8 print:hidden" dir="ltr">
-                <button 
-                  onClick={handleDownloadPDF}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors"
-                >
-                  <FileText size={16} /> Save as PDF
-                </button>
-                <a 
-                  href={coverUrl}
-                  download="cover.jpg"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors"
-                >
-                  <ImageIcon size={16} /> Download Cover
-                </a>
-                <button 
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors"
-                  onClick={() => alert('Sharing is available in the full version!')}
-                >
-                  <Share2 size={16} /> Share
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-8 print:hidden" dir="ltr">
+                <div className="flex items-center gap-2 flex-wrap flex-1">
+                  {downloads && (
+                    <>
+                      <a href={downloads.pdf} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg shadow-sm text-sm font-medium transition-colors">
+                        📕 PDF
+                      </a>
+                      <a href={downloads.docx} download className="flex items-center gap-1.5 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg shadow-sm text-sm font-medium transition-colors">
+                        📘 Word
+                      </a>
+                      <a href={downloads.txt} download className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg shadow-sm text-sm font-medium transition-colors">
+                        📄 TXT
+                      </a>
+                      <a href={downloads.html} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg shadow-sm text-sm font-medium transition-colors">
+                        🌐 HTML
+                      </a>
+                      <a href={downloads.all} download className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg shadow-sm text-sm font-medium transition-colors">
+                        📦 ZIP (All)
+                      </a>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <a 
+                    href={coverUrl}
+                    download="cover.svg"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors"
+                  >
+                    <ImageIcon size={16} /> Cover
+                  </a>
+                  <button 
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors"
+                    onClick={() => alert('Sharing is available in the full version!')}
+                  >
+                    <Share2 size={16} /> Share
+                  </button>
+                </div>
               </div>
 
               {/* BOOK COVER PAGE (Print Page 1) */}
