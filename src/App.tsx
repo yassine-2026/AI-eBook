@@ -17,22 +17,43 @@ interface BookData {
 }
 
 const GENRES = [
-  'تعليمي (Educational)',
-  'قصص (Fiction/Stories)',
-  'تطوير ذات (Self-Development)',
-  'تقني (Technical)',
-  'ديني (Religious)',
-  'تاريخي (Historical)',
-  'طبخ (Cooking)',
-  'أعمال (Business)'
+  'educational',
+  'story',
+  'self_help',
+  'tech',
+  'religious',
+  'history',
+  'cooking',
+  'business',
+  'science',
+  'romance'
+];
+
+const LANGUAGES = [
+  { name: 'العربية', code: 'arabic' },
+  { name: 'English', code: 'english' },
+  { name: 'Français', code: 'french' },
+  { name: 'Español', code: 'spanish' },
+  { name: 'Deutsch', code: 'german' },
+  { name: 'Italiano', code: 'italian' },
+  { name: 'Português', code: 'portuguese' },
+  { name: 'Русский', code: 'russian' },
+  { name: '中文', code: 'chinese' },
+  { name: '日本語', code: 'japanese' },
+  { name: '한국어', code: 'korean' },
+  { name: 'हिन्दी', code: 'hindi' },
+  { name: 'Türkçe', code: 'turkish' },
+  { name: 'اردو', code: 'urdu' },
+  { name: 'Bahasa Melayu', code: 'malay' }
 ];
 
 export default function App() {
   const [topic, setTopic] = useState('');
   const [genre, setGenre] = useState(GENRES[0]);
   const [chaptersCount, setChaptersCount] = useState(5);
+  const [maxPages, setMaxPages] = useState(100);
   const [author, setAuthor] = useState('');
-  const [language, setLanguage] = useState('Arabic');
+  const [language, setLanguage] = useState(LANGUAGES[0].code);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,6 +83,7 @@ export default function App() {
           topic,
           genre,
           chapters: chaptersCount,
+          max_pages: maxPages,
           author,
           language
         })
@@ -72,10 +94,12 @@ export default function App() {
         throw new Error(data.error || 'Failed to generate book');
       }
 
-      setBook(data.book || data.meta);
-      if (data.chapters) {
-          setBook({ ...data.meta, chapters: data.chapters });
-      }
+      setBook({
+        title: data.title || (data.meta?.title),
+        subtitle: data.subtitle || (data.meta?.subtitle),
+        description: data.description || (data.meta?.description),
+        chapters: data.chapters || []
+      });
       setCoverUrl(data.cover_url);
       setDownloads(data.downloads);
     } catch (err: any) {
@@ -133,10 +157,10 @@ export default function App() {
             <select
               value={genre}
               onChange={e => setGenre(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm appearance-none bg-white"
+              className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm appearance-none bg-white capitalize"
             >
               {GENRES.map(g => (
-                <option key={g} value={g}>{g}</option>
+                <option key={g} value={g}>{g.replace('_', ' ')}</option>
               ))}
             </select>
           </div>
@@ -147,24 +171,37 @@ export default function App() {
               <input
                 type="number"
                 min="3"
-                max="20"
+                max="10"
                 value={chaptersCount}
                 onChange={e => setChaptersCount(parseInt(e.target.value) || 3)}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
               />
             </div>
             <div className="space-y-1.5 flex-1">
+              <label className="text-sm font-semibold text-slate-700">Max Pages</label>
+              <input
+                type="number"
+                min="10"
+                max="100"
+                value={maxPages}
+                onChange={e => setMaxPages(parseInt(e.target.value) || 100)}
+                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-1.5 flex-1">
               <label className="text-sm font-semibold text-slate-700">Language</label>
               <select
                 value={language}
                 onChange={e => setLanguage(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm appearance-none bg-white"
               >
-                <option value="Arabic">Arabic (العربية)</option>
-                <option value="English">English</option>
+                {LANGUAGES.map(l => (
+                    <option key={l.code} value={l.code}>{l.name}</option>
+                ))}
               </select>
             </div>
-          </div>
 
           {error && (
             <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm">
@@ -220,7 +257,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="max-w-4xl mx-auto p-8 md:p-12 print:p-0 print:max-w-none"
-              dir={language === 'Arabic' ? 'rtl' : 'ltr'}
+              dir={['arabic', 'urdu'].includes(language) ? 'rtl' : 'ltr'}
             >
               
               {/* Header Actions - HIDDEN IN PRINT */}
@@ -280,7 +317,7 @@ export default function App() {
                   {book.subtitle && <p className="text-xl md:text-2xl text-slate-200 font-light mb-12 drop-shadow-md">{book.subtitle}</p>}
                   <div className="w-16 h-1 bg-indigo-500 mb-8 rounded-full"></div>
                   <p className="text-lg font-medium text-slate-300 uppercase tracking-widest drop-shadow-md">
-                    {language === 'Arabic' ? 'تأليف' : 'Author'}
+                    {['arabic', 'urdu'].includes(language) ? 'تأليف' : 'By'}
                   </p>
                   <p className="text-2xl font-semibold mt-1 drop-shadow-md">{author}</p>
                 </div>
@@ -289,7 +326,7 @@ export default function App() {
               {/* TABLE OF CONTENTS (Print Page Break) */}
               <div className="print-page bg-white p-10 md:p-16 rounded-xl shadow-sm border border-slate-100 mb-12 print:shadow-none print:border-none print:m-0 print:p-12 print:min-h-screen">
                 <h2 className="text-3xl font-bold text-slate-900 mb-8 border-b border-slate-100 pb-4">
-                  {language === 'Arabic' ? 'فهرس المحتويات' : 'Table of Contents'}
+                  {['arabic', 'urdu'].includes(language) ? 'فهرس المحتويات' : 'Table of Contents'}
                 </h2>
                 <div className="space-y-4">
                   {book.chapters.map((ch, idx) => (
@@ -302,7 +339,7 @@ export default function App() {
                 
                 <div className="mt-16 pt-8 border-t border-slate-100">
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                    {language === 'Arabic' ? 'عن الكتاب' : 'About this Book'}
+                    {['arabic', 'urdu'].includes(language) ? 'عن الكتاب' : 'About this Book'}
                   </h3>
                   <p className="text-slate-600 leading-relaxed">{book.description}</p>
                 </div>
@@ -314,7 +351,7 @@ export default function App() {
                   <div key={idx} className="print-page bg-white p-10 md:p-16 rounded-xl shadow-sm border border-slate-100 print:shadow-none print:border-none print:m-0 print:p-12 print:min-h-screen">
                     <div className="mb-10 text-center">
                       <span className="text-indigo-600 font-bold uppercase tracking-widest text-sm mb-2 block">
-                        {language === 'Arabic' ? `الفصل ${ch.number}` : `Chapter ${ch.number}`}
+                        {['arabic', 'urdu'].includes(language) ? `الفصل ${ch.number}` : `Chapter ${ch.number}`}
                       </span>
                       <h2 className="text-3xl font-bold text-slate-900">{ch.title}</h2>
                     </div>
